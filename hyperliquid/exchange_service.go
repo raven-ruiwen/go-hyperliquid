@@ -62,6 +62,11 @@ func NewExchangeAPI(isMainnet bool) *ExchangeAPI {
 		api.SetDebugActive()
 		api.debug("Error building spot meta map: %s", err)
 	}
+
+	hype := spotMeta["HYPE"]
+	hype.AssetId = 107
+	spotMeta["HYPE"] = hype
+
 	api.spotMeta = spotMeta
 
 	return &api
