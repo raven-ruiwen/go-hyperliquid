@@ -35,11 +35,12 @@ func HexToBytes(addr string) []byte {
 	}
 }
 
-func OrderWiresToOrderAction(orders []OrderWire, grouping Grouping) PlaceOrderAction {
+func OrderWiresToOrderAction(orders []OrderWire, grouping Grouping, builder *Builder) PlaceOrderAction {
 	return PlaceOrderAction{
 		Type:     "order",
 		Grouping: grouping,
 		Orders:   orders,
+		Builder:  builder,
 	}
 }
 

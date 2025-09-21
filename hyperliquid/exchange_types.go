@@ -114,6 +114,7 @@ type PlaceOrderAction struct {
 	Type     string      `msgpack:"type" json:"type"`
 	Orders   []OrderWire `msgpack:"orders" json:"orders"`
 	Grouping Grouping    `msgpack:"grouping" json:"grouping"`
+	Builder  *Builder    `msgpack:"builder" json:"builder,omitempty"`
 }
 
 type OrderResponse struct {
@@ -268,4 +269,9 @@ type WithdrawAction struct {
 type WithdrawResponse struct {
 	Status string `json:"status"`
 	Nonce  int64
+}
+
+type Builder struct {
+	B string `json:"b"`
+	F int    `json:"f"`
 }

@@ -117,7 +117,7 @@ func (api *ExchangeAPI) BuildBulkOrdersEIP712(requests []OrderRequest, grouping 
 		wires = append(wires, OrderRequestToWire(req, api.meta, false))
 	}
 	timestamp := GetNonce()
-	action := OrderWiresToOrderAction(wires, grouping)
+	action := OrderWiresToOrderAction(wires, grouping, nil)
 	srequest, err := api.BuildEIP712Message(action, timestamp)
 	if err != nil {
 		api.debug("Error building EIP712 message: %s", err)
@@ -137,7 +137,7 @@ func (api *ExchangeAPI) BuildOrderEIP712(request OrderRequest, grouping Grouping
 
 // Place orders in bulk
 // https://hyperliquid.gitbook.io/hyperliquid-docs/for-developers/api/exchange-endpoint#place-an-order
-func (api *ExchangeAPI) BulkOrders(requests []OrderRequest, grouping Grouping, isSpot bool) (*OrderResponse, error) {
+func (api *ExchangeAPI) BulkOrders(requests []OrderRequest, grouping Grouping, isSpot bool, builder *Builder) (*OrderResponse, error) {
 	var wires []OrderWire
 	var meta map[string]AssetInfo
 	if isSpot {
@@ -149,7 +149,7 @@ func (api *ExchangeAPI) BulkOrders(requests []OrderRequest, grouping Grouping, i
 		wires = append(wires, OrderRequestToWire(req, meta, isSpot))
 	}
 	timestamp := GetNonce()
-	action := OrderWiresToOrderAction(wires, grouping)
+	action := OrderWiresToOrderAction(wires, grouping, builder)
 	v, r, s, err := api.SignL1Action(action, timestamp)
 	if err != nil {
 		api.debug("Error signing L1 action: %s", err)
@@ -296,8 +296,8 @@ func (api *ExchangeAPI) Withdraw(destination string, amount float64) (*WithdrawR
 //
 
 // Place single order
-func (api *ExchangeAPI) Order(request OrderRequest, grouping Grouping) (*OrderResponse, error) {
-	return api.BulkOrders([]OrderRequest{request}, grouping, false)
+func (api *ExchangeAPI) Order(request OrderRequest, grouping Grouping, builder *Builder) (*OrderResponse, error) {
+	return api.BulkOrders([]OrderRequest{request}, grouping, false, builder)
 }
 
 // Open a market order.
@@ -307,7 +307,7 @@ func (api *ExchangeAPI) Order(request OrderRequest, grouping Grouping) (*OrderRe
 //	MarketOrder("BTC", 0.1, nil) // Buy 0.1 BTC
 //	MarketOrder("BTC", -0.1, nil) // Sell 0.1 BTC
 //	MarketOrder("BTC", 0.1, &slippage) // Buy 0.1 BTC with slippage
-func (api *ExchangeAPI) MarketOrder(coin string, size float64, slippage *float64, clientOID ...string) (*OrderResponse, error) {
+func (api *ExchangeAPI) MarketOrder(coin string, size float64, slippage *float64, builder *Builder, clientOID ...string) (*OrderResponse, error) {
 	slpg := GetSlippage(slippage)
 	isBuy := IsBuy(size)
 	finalPx := api.SlippagePrice(coin, isBuy, slpg)
@@ -327,7 +327,7 @@ func (api *ExchangeAPI) MarketOrder(coin string, size float64, slippage *float64
 	if len(clientOID) > 0 {
 		orderRequest.Cloid = clientOID[0]
 	}
-	return api.Order(orderRequest, GroupingNa)
+	return api.Order(orderRequest, GroupingNa, builder)
 }
 
 // MarketOrderSpot is a market order for a spot coin.
@@ -338,7 +338,7 @@ func (api *ExchangeAPI) MarketOrder(coin string, size float64, slippage *float64
 //	MarketOrderSpot("HYPE", 0.1, nil) // Buy 0.1 HYPE
 //	MarketOrderSpot("HYPE", -0.1, nil) // Sell 0.1 HYPE
 //	MarketOrderSpot("HYPE", 0.1, &slippage) // Buy 0.1 HYPE with slippage
-func (api *ExchangeAPI) MarketOrderSpot(coin string, size float64, slippage *float64) (*OrderResponse, error) {
+func (api *ExchangeAPI) MarketOrderSpot(coin string, size float64, slippage *float64, builder *Builder, clientOID ...string) (*OrderResponse, error) {
 	slpg := GetSlippage(slippage)
 	isBuy := IsBuy(size)
 	finalPx := api.SlippagePriceSpot(coin, isBuy, slpg)
@@ -355,7 +355,10 @@ func (api *ExchangeAPI) MarketOrderSpot(coin string, size float64, slippage *flo
 		OrderType:  orderType,
 		ReduceOnly: false,
 	}
-	return api.OrderSpot(orderRequest, GroupingNa)
+	if len(clientOID) > 0 {
+		orderRequest.Cloid = clientOID[0]
+	}
+	return api.OrderSpot(orderRequest, GroupingNa, builder)
 }
 
 // Open a limit order.
@@ -383,7 +386,7 @@ func (api *ExchangeAPI) LimitOrder(orderType string, coin string, size float64, 
 	if len(clientOID) > 0 {
 		orderRequest.Cloid = clientOID[0]
 	}
-	return api.Order(orderRequest, GroupingNa)
+	return api.Order(orderRequest, GroupingNa, nil)
 }
 
 // Close all positions for a given coin. They are closing with a market order.
@@ -421,14 +424,14 @@ func (api *ExchangeAPI) ClosePosition(coin string) (*OrderResponse, error) {
 			OrderType:  orderType,
 			ReduceOnly: true,
 		}
-		return api.Order(orderRequest, GroupingNa)
+		return api.Order(orderRequest, GroupingNa, nil)
 	}
 	return nil, APIError{Message: fmt.Sprintf("No position found for %s", coin)}
 }
 
 // OrderSpot places a spot order
-func (api *ExchangeAPI) OrderSpot(request OrderRequest, grouping Grouping) (*OrderResponse, error) {
-	return api.BulkOrders([]OrderRequest{request}, grouping, true)
+func (api *ExchangeAPI) OrderSpot(request OrderRequest, grouping Grouping, builder *Builder) (*OrderResponse, error) {
+	return api.BulkOrders([]OrderRequest{request}, grouping, true, builder)
 }
 
 // Cancel exact order by OID
