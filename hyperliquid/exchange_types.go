@@ -114,7 +114,7 @@ type PlaceOrderAction struct {
 	Type     string      `msgpack:"type" json:"type"`
 	Orders   []OrderWire `msgpack:"orders" json:"orders"`
 	Grouping Grouping    `msgpack:"grouping" json:"grouping"`
-	Builder  *Builder    `msgpack:"builder" json:"builder,omitempty"`
+	Builder  *Builder    `msgpack:"builder,omitempty" json:"builder,omitempty"`
 }
 
 type OrderResponse struct {
