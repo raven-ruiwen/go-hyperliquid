@@ -272,6 +272,6 @@ type WithdrawResponse struct {
 }
 
 type Builder struct {
-	B string `json:"b"`
-	F int    `json:"f"`
+	B string `msgpack:"b" json:"b"`
+	F int    `msgpack:"f" json:"f"`
 }
