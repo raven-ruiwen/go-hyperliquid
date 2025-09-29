@@ -68,10 +68,10 @@ func NewExchangeAPI(isMainnet bool) *ExchangeAPI {
 	hype.SpotName = "@107"
 	spotMeta["HYPE"] = hype
 
-	xpl := spotMeta["XPL"]
-	xpl.AssetId = 210
-	xpl.SpotName = "@210"
-	spotMeta["XPL"] = xpl
+	uxpl := spotMeta["UXPL"]
+	uxpl.AssetId = 210
+	uxpl.SpotName = "@210"
+	spotMeta["UXPL"] = uxpl
 
 	api.spotMeta = spotMeta
 
