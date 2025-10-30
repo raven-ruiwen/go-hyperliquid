@@ -86,6 +86,10 @@ func (api *ExchangeAPI) Endpoint() string {
 	return api.baseEndpoint
 }
 
+func (api *ExchangeAPI) SpotMetaMap() map[string]AssetInfo {
+	return api.spotMeta
+}
+
 // Helper function to calculate the slippage price based on the market price.
 func (api *ExchangeAPI) SlippagePrice(coin string, isBuy bool, slippage float64) float64 {
 	marketPx, err := api.infoAPI.GetMartketPx(coin)
